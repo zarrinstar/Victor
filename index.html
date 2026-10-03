@@ -622,9 +622,216 @@
       }
     }
   </style>
+  <style>
+  .signup-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 9999;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.78);
+    backdrop-filter: blur(10px);
+  }
+
+  .signup-overlay.active {
+    display: flex;
+  }
+
+  .signup-modal {
+    width: min(100%, 430px);
+    background: #0d1113;
+    border: 1px solid rgba(255,255,255,.1);
+    border-radius: 18px;
+    padding: 32px;
+    position: relative;
+    box-shadow: 0 30px 80px rgba(0,0,0,.5);
+  }
+
+  .signup-close {
+    position: absolute;
+    top: 14px;
+    left: 16px;
+    width: 36px;
+    height: 36px;
+    border: 0;
+    background: transparent;
+    color: #9aa5a7;
+    font-size: 24px;
+    cursor: pointer;
+  }
+
+  .signup-title {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 6px;
+  }
+
+  .signup-subtitle {
+    color: #9aa5a7;
+    font-size: 14px;
+    margin-bottom: 26px;
+  }
+
+  .signup-label {
+    display: block;
+    font-size: 13px;
+    color: #9aa5a7;
+    margin-bottom: 8px;
+  }
+
+  .signup-input {
+    width: 100%;
+    height: 52px;
+    border-radius: 11px;
+    border: 1px solid rgba(255,255,255,.1);
+    background: #111719;
+    color: #f1f4f4;
+    padding: 0 15px;
+    font-family: inherit;
+    font-size: 16px;
+    outline: none;
+    direction: ltr;
+    text-align: left;
+  }
+
+  .signup-input:focus {
+    border-color: #62a4ac;
+  }
+
+  .signup-btn {
+    width: 100%;
+    height: 52px;
+    margin-top: 14px;
+    border: 0;
+    border-radius: 11px;
+    background: #2e6871;
+    color: #fff;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+  }
+
+  .signup-btn:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+  }
+
+  .signup-message {
+    min-height: 24px;
+    margin-top: 14px;
+    font-size: 13px;
+    color: #9aa5a7;
+    text-align: center;
+  }
+
+  .signup-success {
+    text-align: center;
+    padding: 15px 0;
+  }
+
+  .signup-success-icon {
+    font-size: 42px;
+    margin-bottom: 10px;
+  }
+</style>
 </head>
 
 <body>
+  <div class="signup-overlay" id="signupOverlay">
+  <div class="signup-modal">
+
+    <button class="signup-close" type="button" onclick="closeSignup()">×</button>
+
+    <div id="signupStep1">
+      <div class="signup-title">ثبت نام</div>
+      <div class="signup-subtitle">
+        برای ثبت نام، شماره موبایل خود را وارد کنید.
+      </div>
+
+      <label class="signup-label">شماره موبایل</label>
+
+      <input
+        id="signupPhone"
+        class="signup-input"
+        type="tel"
+        inputmode="numeric"
+        maxlength="11"
+        placeholder="09123456789"
+      />
+
+      <button
+        class="signup-btn"
+        id="sendOtpBtn"
+        type="button"
+        onclick="sendSignupOtp()"
+      >
+        دریافت کد یکبار مصرف
+      </button>
+
+      <div class="signup-message" id="signupMessage"></div>
+    </div>
+
+
+    <div id="signupStep2" style="display:none;">
+
+      <div class="signup-title">تأیید شماره</div>
+
+      <div class="signup-subtitle">
+        کد یکبار مصرف ارسال‌شده را وارد کنید.
+      </div>
+
+      <label class="signup-label">کد تأیید</label>
+
+      <input
+        id="signupOtp"
+        class="signup-input"
+        type="tel"
+        inputmode="numeric"
+        maxlength="6"
+        placeholder="123456"
+      />
+
+      <button
+        class="signup-btn"
+        id="verifyOtpBtn"
+        type="button"
+        onclick="verifySignupOtp()"
+      >
+        تأیید و ثبت نام
+      </button>
+
+      <div class="signup-message" id="otpMessage"></div>
+
+    </div>
+
+
+    <div id="signupSuccess" style="display:none;">
+      <div class="signup-success">
+        <div class="signup-success-icon">✓</div>
+
+        <div class="signup-title">
+          ثبت نام با موفقیت انجام شد
+        </div>
+
+        <div class="signup-subtitle">
+          شماره موبایل شما با موفقیت تأیید شد.
+        </div>
+
+        <button
+          class="signup-btn"
+          type="button"
+          onclick="closeSignup()"
+        >
+          بستن
+        </button>
+      </div>
+    </div>
+
+  </div>
+</div>
 
   <!-- HEADER -->
   <header>
@@ -637,6 +844,7 @@
       <nav>
   <a href="#about">درباره ما</a>
   <a href="#approach">رویکرد ما</a>
+        <a href="#" onclick="openSignup(); return false;">ثبت نام</a>
   <a href="https://script.google.com/macros/s/AKfycbzaAvs1HjZj_PryhfdEDnDdKAgFMDZDjxIppVlZ6jeyDdE_MVuFe5BGek1gEmNQ9lV9/exec?page=customer">
     ورود مشتری
   </a>
@@ -966,6 +1174,173 @@
 
     </div>
   </footer>
+<script>
+const VICTOR_OTP_API =
+  'https://script.google.com/macros/s/AKfycbyL5B9Rjkcmpwsj-5VGqbLey5cLV4yoWV8bD0KLlXfLtuumqPzxCFXQ1l8PfK4qRDhg/exec';
 
+let signupPhone = '';
+
+function openSignup() {
+  document.getElementById('signupOverlay').classList.add('active');
+
+  document.getElementById('signupStep1').style.display = 'block';
+  document.getElementById('signupStep2').style.display = 'none';
+  document.getElementById('signupSuccess').style.display = 'none';
+
+  document.getElementById('signupPhone').value = '';
+  document.getElementById('signupOtp').value = '';
+
+  document.getElementById('signupMessage').textContent = '';
+  document.getElementById('otpMessage').textContent = '';
+}
+
+function closeSignup() {
+  document.getElementById('signupOverlay').classList.remove('active');
+}
+
+function normalizeSignupPhone(phone) {
+  phone = String(phone || '')
+    .replace(/[۰-۹]/g, d => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d))
+    .replace(/[٠-٩]/g, d => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+    .replace(/\s|-/g, '');
+
+  if (phone.startsWith('+98')) {
+    phone = '0' + phone.substring(3);
+  }
+
+  if (phone.startsWith('98')) {
+    phone = '0' + phone.substring(2);
+  }
+
+  return phone;
+}
+
+function sendSignupOtp() {
+
+  const input = document.getElementById('signupPhone');
+  const message = document.getElementById('signupMessage');
+  const button = document.getElementById('sendOtpBtn');
+
+  const phone = normalizeSignupPhone(input.value);
+
+  if (!/^09\d{9}$/.test(phone)) {
+    message.textContent = 'شماره موبایل صحیح نیست.';
+    return;
+  }
+
+  signupPhone = phone;
+
+  button.disabled = true;
+  message.textContent = 'در حال ارسال کد...';
+
+  const callbackName =
+    'victorOtp_' + Date.now();
+
+  window[callbackName] = function(result) {
+
+    try {
+      if (result && result.success) {
+
+        document.getElementById('signupStep1').style.display = 'none';
+        document.getElementById('signupStep2').style.display = 'block';
+
+        document.getElementById('signupOtp').focus();
+
+      } else {
+        message.textContent =
+          result?.message || 'ارسال کد انجام نشد.';
+      }
+
+    } finally {
+      button.disabled = false;
+      delete window[callbackName];
+    }
+  };
+
+  const script = document.createElement('script');
+
+  script.src =
+    VICTOR_OTP_API +
+    '?action=sendOtp' +
+    '&phone=' +
+    encodeURIComponent(phone) +
+    '&callback=' +
+    callbackName;
+
+  script.onerror = function() {
+    message.textContent = 'خطا در ارتباط با سرور.';
+    button.disabled = false;
+    delete window[callbackName];
+  };
+
+  document.body.appendChild(script);
+}
+
+
+function verifySignupOtp() {
+
+  const otp =
+    document.getElementById('signupOtp').value.trim();
+
+  const message =
+    document.getElementById('otpMessage');
+
+  const button =
+    document.getElementById('verifyOtpBtn');
+
+  if (!/^\d{6}$/.test(otp)) {
+    message.textContent = 'کد ۶ رقمی را وارد کنید.';
+    return;
+  }
+
+  button.disabled = true;
+  message.textContent = 'در حال بررسی...';
+
+  const callbackName =
+    'victorVerify_' + Date.now();
+
+  window[callbackName] = function(result) {
+
+    try {
+
+      if (result && result.success) {
+
+        document.getElementById('signupStep2').style.display = 'none';
+        document.getElementById('signupSuccess').style.display = 'block';
+
+      } else {
+
+        message.textContent =
+          result?.message || 'کد صحیح نیست.';
+
+      }
+
+    } finally {
+      button.disabled = false;
+      delete window[callbackName];
+    }
+  };
+
+  const script = document.createElement('script');
+
+  script.src =
+    VICTOR_OTP_API +
+    '?action=verifyOtp' +
+    '&phone=' +
+    encodeURIComponent(signupPhone) +
+    '&otp=' +
+    encodeURIComponent(otp) +
+    '&callback=' +
+    callbackName;
+
+  script.onerror = function() {
+    message.textContent = 'خطا در ارتباط با سرور.';
+    button.disabled = false;
+    delete window[callbackName];
+  };
+
+  document.body.appendChild(script);
+}
+</script>
 </body>
 </html>
